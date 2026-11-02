@@ -33,6 +33,22 @@ When a Hacker News commenter is the first to recommend a YouTube video, does any
 - Exposure control (the score of the HN story the comment sits under, which does predict catching on: bottom quartile 4.0%, others 6.1–6.3%): Mantel-Haenszel risk ratio by year × story-score quartile 1.54; bootstrap seeds 1/2/3: [1.33, 1.78], [1.33, 1.75], [1.33, 1.75]. Median story score: 130 for the 10%+ group, 123 for the 0% group.
 - Positive control: every HackerTube mention for 2015-06 (112/112) and 2019-03 (238/238) is in our extraction, and 394/395 for 2023-11.
 
+## Added 2026-11-02: karma, and tenure on all videos
+
+Prompted by [a comment under the HackerBooks launch](https://news.ycombinator.com/item?id=50329674) suggesting "weight by karma". One more pass over the same extract (not a fresh download); `karma_fetch.py` reads `karma` and `created` for all 34,524 first recommenders from the HN Firebase API (307 of 113,483 videos have no user record). Karma at the time of a pick is not public, so this is karma today, which already counts everything the person did later.
+
+| Signal (113,176 videos) | Groups | Caught on (year-standardised) | Spearman within year (shuffled-null 95%) |
+|---|---|---|---|
+| Tenure at the pick | <1y · 1–3y · 3–7y · 7y+ | 5.2% · 5.6% · 5.8% · 5.5% | 0.0086 (±0.0056) |
+| Karma today | <1k · 1k–5k · 5k–20k · 20k–50k · 50k+ | 5.3% · 5.8% · 6.0% · 5.6% · 4.7% | 0.0089 (±0.005) |
+
+- Top 10% of picks per year, as a ranking: by tenure 1.01× the base rate ([0.92, 1.11] / [0.93, 1.11], author bootstrap, seeds 1/2); by karma 0.95× ([0.81, 1.10] / [0.78, 1.08]).
+- Among authors with ≥5 earlier first recommendations (41,457 picks, 3,754 authors): top 10% by karma 0.90× / 0.89× of that group's rate ([0.73, 1.05] / [0.68, 1.13]); top 10% by earlier hit rate 1.44× / 1.45× ([1.29, 1.63] / [1.29, 1.61]).
+- Mantel-Haenszel risk ratio, 10%+ vs 0% earlier hits: by year 1.54 [1.33, 1.78] (matches the 11-01 run); by year × karma quartile 1.53 [1.35, 1.74]. Median karma: 9,954 in the 10%+ group, 7,650 in the 0% group, 18,917 in the under-10% group.
+- The tenure row replaces the 9,000-video sample above. On the sample the 7y+ group looked lower (4.8%); on all videos it is 5.5%.
+
+Run: `python3 karma_fetch.py; python3 karma_ana.py; for s in 1 2; do python3 karma_boot.py $s; done` (needs numpy; run after `hit_prep.py`).
+
 ## What this does not show
 
 - Strangers recommending videos on a forum is not friends recommending purchases.
