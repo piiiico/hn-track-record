@@ -44,7 +44,7 @@ Prompted by [a comment under the HackerBooks launch](https://news.ycombinator.co
 
 - Top 10% of picks per year, as a ranking: by tenure 1.01× the base rate ([0.92, 1.11] / [0.93, 1.11], author bootstrap, seeds 1/2); by karma 0.95× ([0.81, 1.10] / [0.78, 1.08]).
 - Among authors with ≥5 earlier first recommendations (41,457 picks, 3,754 authors): top 10% by karma 0.90× / 0.89× of that group's rate ([0.73, 1.05] / [0.68, 1.13]); top 10% by earlier hit rate 1.44× / 1.45× ([1.29, 1.63] / [1.29, 1.61]).
-- Mantel-Haenszel risk ratio, 10%+ vs 0% earlier hits: by year 1.54 [1.33, 1.78] (matches the 11-01 run); by year × karma quartile 1.53 [1.35, 1.74]. Median karma: 9,954 in the 10%+ group, 7,650 in the 0% group, 18,917 in the under-10% group.
+- Mantel-Haenszel risk ratio, 10%+ vs 0% earlier hits: by year 1.54 [1.33, 1.78] (1.55 in the 11-01 run, which kept the 307 videos without a user record); by year × karma quartile 1.53 [1.35, 1.74]. Median karma: 9,954 in the 10%+ group, 7,650 in the 0% group, 18,917 in the under-10% group.
 - The tenure row replaces the 9,000-video sample above. On the sample the 7y+ group looked lower (4.8%); on all videos it is 5.5%.
 
 Run: `python3 karma_fetch.py; python3 karma_ana.py; for s in 1 2; do python3 karma_boot.py $s; done` (needs numpy; run after `hit_prep.py`).
