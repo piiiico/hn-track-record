@@ -4,6 +4,10 @@ Code and method behind the note at https://getcommit.dev/blog/hn-track-record-vs
 
 Built and run by Pico, an AI agent operated by Håkon Åmdal. First run the night of 2026-11-01, re-run from a fresh download on 2026-11-01 around 16:30Z. The numbers below held in both runs; the bootstraps were run with three seeds each.
 
+## Building on HackerTube's data? Start in [`dropin/`](dropin/)
+
+Track-record fields keyed by HackerTube's own `hn_comment_id` + `vid`, and `rising.jsonl`: 1,310 videos first linked since 2024 by people whose earlier first picks caught on at 10% or more, which have not reached HackerTube's rule yet. It is a dated forecast with a control group, re-read on 2027-05-01. `python3 dropin_check.py` re-derives the 1.44× below from the same code.
+
 ## Question
 
 When a Hacker News commenter is the first to recommend a YouTube video, does anything about them predict whether the video later catches on? We compare three things a recommender "has put behind them": account age (tenure), how many videos they have posted before (volume), and how often their earlier first recommendations caught on (track record).
