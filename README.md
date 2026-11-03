@@ -53,6 +53,36 @@ Prompted by [a comment under the HackerBooks launch](https://news.ycombinator.co
 
 Run: `python3 karma_fetch.py; python3 karma_ana.py; for s in 1 2; do python3 karma_boot.py $s; done` (needs numpy; run after `hit_prep.py`).
 
+## Added 2026-11-03: do the tips get read? ([`reads/`](reads/))
+
+"Caught on" counts mentions. For links to English Wikipedia there is a public record of people opening them: daily page views per article.
+
+- Population: HN comments 2015-07..2023-12 linking an en.wikipedia article (391,144 links). Dropped: another HN comment linking the same article within ±3 days, an HN story linking it within ±3 days, or the thread's own URL being the article. 2,200 random people with ≥8 such links, 8 links each (`sample.py`, seed 1103), fetched in random person order so any prefix is a random subset.
+- Outcome: views on comment day + next day vs 2× the median day of days −15..−4 (article baseline 3–2000/day). Placebo: the same on days −3..−2.
+- Sample read: first 1,194 people, 8,582 links (1,109 people with ≥6 usable links for the split-half test). 2% of fetches (200 of 9,556) gave up after repeated 429s.
+
+| | |
+|---|---|
+| Median extra views, 2 days | 49 |
+| Links that at least doubled views | 19.4% (placebo window 3.6%) |
+| Median extra views by depth | top-level 90 · depth 2: 70 · deeper 33 |
+| By hours after the story | <3h 88 · 3–12h 47 · >12h 29 |
+| Earlier-half vs later-half rank correlation, additive model (`ana2.py`) | 0.105, CI95 ≈ [0.05, 0.17] over 3 seeds; placebo 0.021 [−0.04, 0.08] |
+| Same with finer depth and minutes-after-story (`ana4.py`) | 0.097 [0.04, 0.15] |
+| Same with exact group means (`ana.py`) | 0.064, CI95 lower bound 0.002–0.014 across seeds; placebo 0.010 |
+| Later median extra views by quintile of earlier record | 44 · 47 · 52 · 60 · 72 |
+| Top 10% vs rest, later residual | no reliable gap (CI covers 0) |
+
+The rank correlation shrank as more people were added: 0.127 at the first 393, 0.105 at 1,109. Placement (depth, timing) moves reads about 3×; the person adds a small, persistent amount after it. One row re-checked by a fresh API call ("Shays' Rebellion", comment 32655959, 2022-08-30): stored == fresh.
+
+```sh
+cd reads
+cat months.txt | xargs -P 6 -I{} ./wk_month.sh {}   # wiki-link comments + id/parent/type/score index
+python3 prep.py; python3 sample.py
+python3 -u fetch_resume.py                          # Wikimedia pageviews; keep threads at 8 or it 429s
+for s in 1 2 3; do python3 ana.py $s; done; python3 ana2.py; python3 ana4.py; python3 ana3.py; python3 plain.py; python3 causal.py
+```
+
 ## What this does not show
 
 - Strangers recommending videos on a forum is not friends recommending purchases.
