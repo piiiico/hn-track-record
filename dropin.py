@@ -6,10 +6,11 @@ import json,glob,collections,datetime,bisect,random,sys,os
 HT=sys.argv[1] if len(sys.argv)>1 else 'ht/hackertube-data'
 OUT=sys.argv[2] if len(sys.argv)>2 else 'dropin'
 os.makedirs(OUT,exist_ok=True)
-rows=[]
+rows=[];scraped={}  # scraped: every comment id in yt/, kept or not, so a miss can say why
 for f in sorted(glob.glob('yt/*.jsonl')):
   for l in open(f):
     r=json.loads(l)
+    scraped[r['id']]=scraped.get(r['id']) or bool(r['author'])
     if r['author'] and r['ownlen']>=100: rows.append(r)
 rows.sort(key=lambda r:(r['ts'],r['id']))
 END=rows[-1]['ts']
@@ -41,11 +42,13 @@ def tier(n,h):
 byid={}
 for r in rows: byid[(r['id'],r['vid'])]=r
 idts={r['id']:r for r in rows}
-out=[];miss=0;tiers=collections.Counter()
+out=[];miss=0;misses=collections.Counter();tiers=collections.Counter()
 for l in open(f'{HT}/mentions.jsonl'):
   m=json.loads(l)
   r=byid.get((m['hn_comment_id'],m['vid'])) or idts.get(m['hn_comment_id'])
-  if not r: miss+=1; out.append({'hn_comment_id':m['hn_comment_id'],'vid':m['vid'],'found':False}); continue
+  if not r:  # miss: in our scrape but under 100 chars own text (our filter), author deleted, or not in the scrape at all
+    i=m['hn_comment_id'];why='not_in_scrape' if i not in scraped else ('short_text' if scraped[i] else 'author_deleted')
+    miss+=1;misses[why]+=1;out.append({'hn_comment_id':i,'vid':m['vid'],'found':False,'miss':why}); continue
   n,h=record(r['author'],r['ts'],exclude=m['vid'])
   t=tier(n,h); tiers[t]+=1
   out.append({'hn_comment_id':m['hn_comment_id'],'vid':m['vid'],'found':True,
@@ -54,7 +57,7 @@ for l in open(f'{HT}/mentions.jsonl'):
               'earlier_hit_rate':round(h/n,4) if n else None,'tier':t})
 with open(f'{OUT}/trackrecord-mentions.jsonl','w') as o:
   for x in out: o.write(json.dumps(x)+'\n')
-print('mentions',len(out),'not found',miss,dict(tiers))
+print('mentions',len(out),'not found',miss,dict(misses),dict(tiers))
 # --- 2. videos
 vids=[json.loads(l) for l in open(f'{HT}/videos.jsonl')]
 mby=collections.defaultdict(list)
@@ -86,7 +89,10 @@ for v,ms in byv.items():
   elif t=='zero': ctrl_pool.append(row)
 cand.sort(key=lambda r:(r['first_month'],r['first_comment_id']))
 # control: same first-month mix, drawn from first picks whose recommender had >=5 earlier first picks and 0 hits
-random.seed(20261102)
+SEED=20261102
+RULE={'rising':'first linker had 5+ earlier first picks and hit rate >= 0.10 at the time',
+      'control':f'first linker had 5+ earlier first picks and 0 hits; random.sample per first_month, as many as rising has that month; random.seed({SEED}), pool sorted by first_comment_id'}
+random.seed(SEED)
 pm=collections.defaultdict(list)
 for r in ctrl_pool: pm[r['first_month']].append(r)
 need=collections.Counter(r['first_month'] for r in cand);ctrl=[]
@@ -97,8 +103,8 @@ def meta(v):  # optional: YouTube oEmbed title/channel fetched into oe/<vid>.jso
   try: j=json.load(open(f'oe/{v}.json')); return {'title':j.get('title'),'channel':j.get('author_name')}
   except Exception: return {'title':None,'channel':None}
 with open(f'{OUT}/rising.jsonl','w') as o:
-  for r in cand: o.write(json.dumps({**r,**meta(r['vid']),'group':'rising'})+'\n')
-  for r in ctrl: o.write(json.dumps({**r,**meta(r['vid']),'group':'control'})+'\n')
+  for r in cand: o.write(json.dumps({**r,**meta(r['vid']),'group':'rising','rule':RULE['rising']})+'\n')
+  for r in ctrl: o.write(json.dumps({**r,**meta(r['vid']),'group':'control','rule':RULE['control'],'seed':SEED,'matched_month':r['first_month']})+'\n')
 print('data ends',datetime.datetime.fromtimestamp(END,datetime.UTC).isoformat())
 print('rising',len(cand),'control',len(ctrl),'control pool',len(ctrl_pool))
 print('rising already >=2 people',sum(r['people_so_far']>=2 for r in cand),'control',sum(r['people_so_far']>=2 for r in ctrl))

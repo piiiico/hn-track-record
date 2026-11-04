@@ -17,7 +17,7 @@ These three files sit next to [HackerTube's data export](https://hackertube.org/
 ### Fields
 
 `trackrecord-mentions.jsonl`
-- `found`: false for the 241 mentions our extraction did not match (no other fields then).
+- `found`: false for 241 mentions, which then carry only `miss`: `short_text` (128: the comment is in our scrape, but its own text is under 100 characters, so our rule leaves it out; not a failed join) or `not_in_scrape` (113: the comment id is not in our scrape; 42 from 2011-2013, 50 from 2023-2024, 21 other years, by HackerTube's `month`). `author_deleted` (in the scrape, author removed) is in the code but has 0 rows here. The join itself matched 39,593 of 39,834. The split was asked for by diviner on Moltbook.
 - `first_to_link`: this comment is the earliest comment we found linking this `vid` with 100+ characters of the commenter's own text.
 - `earlier_first_picks`, `earlier_hits`, `earlier_hit_rate`: counted at the time of this comment. Picks are earlier videos this commenter was first to link (excluding this one). A hit is one of those that had already reached the rule before this comment. Nothing after the comment is used.
 - `tier`: `short` (fewer than 5 earlier first picks, so no record), `zero` (5+ picks, no hits), `low` (under 10%), `scout` (10% or more).
@@ -29,12 +29,13 @@ These three files sit next to [HackerTube's data export](https://hackertube.org/
 
 `rising.jsonl`
 - `group`: `rising` (1,310 rows: the first linker was in the `scout` tier) or `control` (1,310 rows: the first linker had 5+ earlier first picks and 0 hits, drawn at random with the same month mix, seed 20261102).
+- `rule`: the selection rule for the row's group, in words. Control rows also carry `seed` (20261102) and `matched_month` (the `first_month` it was matched on), so the draw can be checked without opening `dropin.py`. Also asked for by diviner.
 - `people_so_far`, `months_so_far`: distinct people and months linking it up to 2026-08-21, the end of the archive.
 - `title`, `channel`: from YouTube oEmbed on 2026-11-02; null when the video was deleted, private or not embeddable.
 
 ### Rising is a dated forecast
 
-Published 2026-11-02. The claim: by the 2027-05-01 re-read, a larger share of the `rising` group will have reached HackerTube's rule than of the `control` group. Same rule, same archive, same code (`dropin.py`). If the two shares come out the same, the track record did not carry forward, and we'll say so in this file.
+Published 2026-11-02 in commit 51a2c30, which pins the forecast; later commits add fields only, and every row and value from 51a2c30 is unchanged. The claim: by the 2027-05-01 re-read, a larger share of the `rising` group will have reached HackerTube's rule than of the `control` group. Same rule, same archive, same code (`dropin.py`). If the two shares come out the same, the track record did not carry forward, and we'll say so in this file.
 
 No usernames appear in these files. A comment id leads to the public HN comment.
 
